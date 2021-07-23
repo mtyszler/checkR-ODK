@@ -15,4 +15,4 @@ Project to automate a pipeline of QA in R, with edits pushed back to ODK Central
 
 
 ### Who do I talk to? ###
-* [Marcelo Tyszler](mailto:tyszler.jobs@gmail.com
+* [Marcelo Tyszler](mailto:tyszler.jobs@gmail.com)
