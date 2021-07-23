@@ -89,8 +89,8 @@ if (refresh_data){
     tz = "CET"
   )
   ru_setup(
-    un = "get your own", #add your own
-    pw = "get your own" # add your own
+    un = "mtyszler@gmail.com", #add your own
+    pw = "mtODKSand123@" # add your own
   )
   ru_setup(
     pid = 20,
@@ -244,107 +244,4 @@ if (nrow(action)>0){
 # save outputs -----------------------------------------------------------
 write.csv(data, data_file, row.names = FALSE)
 write.csv(decisions, decisions_file, row.names = FALSE)
-
-#---------------------
-# temp drafts for the API end points
-
-pid = get_default_pid()
-fid = get_default_fid()
-url = get_default_url()
-un = get_default_un()
-pw = get_default_pw()
-retries = get_retries()
-iid = data$id[1]
-
-
-### add comment
-httr::RETRY(
-  "POST",
-  glue::glue(
-    "{url}/v1/projects/{pid}/forms/",
-    "{URLencode(fid, reserved = TRUE)}/submissions/{iid}/comments"
-  ),
-  config = httr::authenticate(un, pw),
-  body = list("body"= "commented created by R: age was changed to 46"),
-  encode = "json",
-  times = retries
-)
-
-# change review state
-httr::RETRY(
-  "PATCH",
-  glue::glue(
-    "{url}/v1/projects/{pid}/forms/",
-    "{URLencode(fid, reserved = TRUE)}/submissions/{iid}"
-  ),
-  config = httr::authenticate(un, pw),
-  body = list("reviewState"= "hasIssues"),
-  encode = "json",
-  times = retries
-)
-
-# get review state
-a<-httr::RETRY(
-  "get",
-  glue::glue(
-    "{url}/v1/projects/{pid}/forms/",
-    "{URLencode(fid, reserved = TRUE)}/submissions/{iid}"
-  ),
-  config = httr::authenticate(un, pw),
-  times = retries
-) %>% httr::content(.) %>% magrittr::extract2("reviewState")
-
-
-# get submission XML
-this_subm<-httr::RETRY(
-  "GET",
-  glue::glue(
-    "{url}/v1/projects/{pid}/forms/",
-    "{URLencode(fid, reserved = TRUE)}/submissions/{iid}.xml"
-  ),
-  config = httr::authenticate(un, pw),
-  times = retries
-) %>%
-  httr::content(.) 
-
-
-# modify submission
-#this_subm<-get_one_submission(iid)
-#this_subm['data']['age'][[1]][1]<-21
-this_node <- xml_find_first(this_subm, "age")
-xml_text(this_node)<-toString(46)
-
-instanceID_node <- xml_find_first(this_subm, "meta/instanceID")
-deprecatedID_node<-xml_find_first(this_subm, "meta/deprecatedID")
-
-if (is.na(deprecatedID_node)) {
-  
-  xml_add_sibling(instanceID_node,instanceID_node)
-  xml_name(instanceID_node)<-"deprecatedID"
-  instanceID_node <- xml_find_first(this_subm, "meta/instanceID")
-} else {
-  xml_text(deprecatedID_node)<-xml_text(instanceID_node)
-}
-
-xml_text(instanceID_node)<-paste0("uuid:", UUIDgenerate(FALSE))
-
-
-write_xml(this_subm,"temp.xml")
-
-# update submission
-header <-httr::authenticate(un, pw)
-ctype <- httr::content_type_xml()
-header$headers<-ctype$headers
-httr::RETRY(
-  "PUT",
-  glue::glue(
-    "{url}/v1/projects/{pid}/forms/",
-    "{URLencode(fid, reserved = TRUE)}/submissions/{iid}"
-  ),
-  config = header,
-  body = httr::upload_file("temp.xml") ,
-  times = retries
-)
-file.remove("temp.xml")
-
 
