@@ -1,5 +1,26 @@
-add_labels_to_colnames <- function(odk_data, form_sch_ext, target_table) {
+add_labels_to_colnames <- function(odk_data, form_sch_ext, target_table,
+                                   label_option = 1) {
   
+  # get language options;
+  # extract label languages:
+  label_options <- colnames(form_sch_ext) %>%
+    as.data.frame(stringsAsFactors = FALSE) %>%
+    filter(grepl("label", .))
+  
+  # drop label options which are completely empty:
+  for (this_label in label_options[, 1]) {
+    if (all(is.na(form_sch_ext[[this_label]]))) {
+      form_sch_ext[[this_label]] <- NULL
+    }
+  }
+  # update after clean-up:
+  label_options <- colnames(form_sch_ext) %>%
+    as.data.frame(stringsAsFactors = FALSE) %>%
+    filter(grepl("label", .))
+  
+  # taking the first option by default
+  colnames(form_sch_ext)[colnames(form_sch_ext)==label_options[label_option,1]]<-"label"
+
   # collate labels to odk data colnames
   cnames<-colnames(odk_data) %>% as.data.frame()
   colnames(cnames)[1]<-"ruodk_name"
