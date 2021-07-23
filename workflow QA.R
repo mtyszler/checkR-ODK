@@ -41,6 +41,7 @@ library(pointblank)
 # please use my own fork:
 #remotes::install_github('mtyszler/DataEditR', ref = "develop")
 library(DataEditR)
+source("R_supporting_functions.R")
 
 
 # file names and parameters ----------------------------------------------------
@@ -154,7 +155,7 @@ if (reset_decisions) {
 } else {
 
   decisions <- tryCatch({
-    read.csv(decisions_file)
+    read.csv(decisions_file, check.names=FALSE)
   },
   error = function(e){
     return(data.frame(action = character(),
@@ -199,8 +200,10 @@ for (i in 1:nrow(validation_set)){
 
 # Inspect and decide on actions ----------------------------------------------
 
+#decisions<-add_labels_to_colnames(data, form_sch_ext, decisions)
 non_edit_cols = colnames(decisions)[colnames(decisions) != 
                                       c("action","variable_value")]
+
 decisions<-data_edit(decisions, 
                      viewer = editor,
                      title = "QA decisions",
