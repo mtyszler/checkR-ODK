@@ -93,7 +93,7 @@ if (refresh_data){
   )
   ru_setup(
     pid = 20,
-    fid = "sample"
+    fid = "sample_one_lang"
   )
   
   data<-odata_submission_get()
