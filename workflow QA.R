@@ -200,7 +200,7 @@ for (i in 1:nrow(validation_set)){
 
 # Inspect and decide on actions ----------------------------------------------
 
-#decisions<-add_labels_to_colnames(data, form_sch_ext, decisions)
+decisions<-add_labels_to_colnames(data, form_sch_ext, decisions)
 non_edit_cols = colnames(decisions)[colnames(decisions) != 
                                       c("action","variable_value")]
 
