@@ -1,5 +1,7 @@
-add_labels_to_colnames <- function(odk_data, form_sch_ext, target_table,
-                                   label_option = 1) {
+#library(xml2)
+
+add_labels_to_colnames <- function(odk_data, form_xml, form_sch_ext, target_table,
+                                   label_option = NA) {
   
   # get language options;
   # extract label languages:
@@ -17,6 +19,23 @@ add_labels_to_colnames <- function(odk_data, form_sch_ext, target_table,
   label_options <- colnames(form_sch_ext) %>%
     as.data.frame(stringsAsFactors = FALSE) %>%
     filter(grepl("label", .))
+  
+  # choose language:
+  if (nrow(label_options)==1) {
+    label_option = 1
+  } else if (is.na(label_option)) {
+    all_translations <- xml2::xml_find_all(x, "//translation")
+    def_trans<-xml_attr(all_translations, "default")=="true()"
+    if (sum(def_trans==TRUE, na.rm = TRUE)==1) {
+      def_lang <- xml_attr(all_translations[which(def_trans)], "lang")
+      def_lang <- paste0("label_", str_to_lower(def_lang))
+      label_option =  which(label_options==def_lang)
+    } else {
+      label_option = 1
+    }
+  }
+    
+   
   
   # taking the first option by default
   colnames(form_sch_ext)[colnames(form_sch_ext)==label_options[label_option,1]]<-"label"

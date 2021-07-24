@@ -41,6 +41,7 @@ library(pointblank)
 # please use my own fork:
 #remotes::install_github('mtyszler/DataEditR', ref = "develop")
 library(DataEditR)
+library(xml2)
 source("R_supporting_functions.R")
 
 
@@ -100,6 +101,7 @@ if (refresh_data){
   data<-odata_submission_get()
   form_sch <- form_schema()
   form_sch_ext <- form_schema_ext()
+  form_xml<-form_xml(parse = FALSE) %>% xml_ns_strip(.)
   
 } else {
   tryCatch({
@@ -200,7 +202,7 @@ for (i in 1:nrow(validation_set)){
 
 # Inspect and decide on actions ----------------------------------------------
 
-decisions<-add_labels_to_colnames(data, form_sch_ext, decisions)
+decisions<-add_labels_to_colnames(data, form_xml, form_sch_ext, decisions)
 non_edit_cols = colnames(decisions)[colnames(decisions) != 
                                       c("action","variable_value")]
 
