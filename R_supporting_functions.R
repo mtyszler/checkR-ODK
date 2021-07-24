@@ -90,7 +90,7 @@ edit_submission <-function(iid, comment, field, new_value,
     httr::content(.) 
   
   # modify submission
-  target_node <- xml_find_first(subm_xml, field)
+  target_node <- xml_find_first(subm_xml, paste0(".",field))
   
   # check for type compliance
   xml_text(target_node)<-toString(new_value)
