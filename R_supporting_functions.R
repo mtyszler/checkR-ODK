@@ -1,4 +1,5 @@
 #library(xml2)
+#library(uuid)
 
 add_labels_to_colnames <- function(odk_data, form_xml, form_sch_ext, target_table,
                                    label_option = NA) {
@@ -64,18 +65,20 @@ add_labels_to_colnames <- function(odk_data, form_xml, form_sch_ext, target_tabl
 }
 
 
-edit_submission <-function(iid){
+edit_submission <-function(iid, comment, field, new_value,
+                           pid = get_default_pid(),
+                           fid = get_default_fid(),
+                           url = get_default_url(),
+                           un = get_default_un(),
+                           pw = get_default_pw(),
+                           retries = get_retries()){
+  # written similar to ruODK::get_one_submission
   
-  pid = get_default_pid()
-  fid = get_default_fid()
-  url = get_default_url()
-  un = get_default_un()
-  pw = get_default_pw()
-  retries = get_retries()
-  iid = data$id[1]
+  success<-FALSE
   
+
   # get submission XML
-  this_subm<-httr::RETRY(
+  subm_xml<-httr::RETRY(
     "GET",
     glue::glue(
       "{url}/v1/projects/{pid}/forms/",
@@ -87,27 +90,31 @@ edit_submission <-function(iid){
     httr::content(.) 
   
   # modify submission
-  #this_subm<-get_one_submission(iid)
-  #this_subm['data']['age'][[1]][1]<-21
-  this_node <- xml_find_first(this_subm, "age")
-  xml_text(this_node)<-toString(46)
+  target_node <- xml_find_first(subm_xml, field)
   
-  instanceID_node <- xml_find_first(this_subm, "meta/instanceID")
-  deprecatedID_node<-xml_find_first(this_subm, "meta/deprecatedID")
+  # check for type compliance
+  xml_text(target_node)<-toString(new_value)
+  
+  # update instanceID
+  instanceID_node <- xml_find_first(subm_xml, "meta/instanceID")
+  deprecatedID_node<-xml_find_first(subm_xml, "meta/deprecatedID")
   
   if (is.na(deprecatedID_node)) {
+    # if no deprecatedID, create one
     
     xml_add_sibling(instanceID_node,instanceID_node)
     xml_name(instanceID_node)<-"deprecatedID"
-    instanceID_node <- xml_find_first(this_subm, "meta/instanceID")
+    instanceID_node <- xml_find_first(subm_xml, "meta/instanceID")
   } else {
+    # if exists, update value with current instance ID
     xml_text(deprecatedID_node)<-xml_text(instanceID_node)
   }
   
+  # generate new UUID
   xml_text(instanceID_node)<-paste0("uuid:", UUIDgenerate(FALSE))
   
-  
-  write_xml(this_subm,"temp.xml")
+  # save as temporary file
+  write_xml(subm_xml,"subm_xml.xml")
   
   # update submission
   header <-httr::authenticate(un, pw)
@@ -120,10 +127,10 @@ edit_submission <-function(iid){
       "{URLencode(fid, reserved = TRUE)}/submissions/{iid}"
     ),
     config = header,
-    body = httr::upload_file("temp.xml") ,
+    body = httr::upload_file("subm_xml.xml") ,
     times = retries
   )
-  file.remove("temp.xml")
+  file.remove("subm_xml.xml")
   
   
   
@@ -135,13 +142,15 @@ edit_submission <-function(iid){
       "{URLencode(fid, reserved = TRUE)}/submissions/{iid}/comments"
     ),
     config = httr::authenticate(un, pw),
-    body = list("body"= "commented created by R: age was changed to 46"),
+    body = list("body"= comment),
     encode = "json",
     times = retries
   )
   
   
-  
+  # return
+  success<-TRUE
+  return(success)
   
   
 }
