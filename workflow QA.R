@@ -23,7 +23,7 @@
 #  
 #  Please click on "synchronize" to save your changes
 #
-# Actions will be carried out after "Done" is clicked
+# Actions will pushed to ODK Central
 #
 # At the end, there is an object "data" and a "data.csv" with the modified data
 #
@@ -85,6 +85,7 @@ editor <- "dialog" # "dialog" for window within R
 
 
 # get ODK central data -------------------------------------------------------
+
 if (refresh_data){
   ru_setup(
     # change this address once we have a paid subscription
@@ -100,13 +101,16 @@ if (refresh_data){
     fid = "sample_one_lang"
   )
   
+  print("loading data from ODK")
   data<-odata_submission_get()
+  print("extracting form information")
   form_sch <- form_schema()
   form_sch_ext <- form_schema_ext()
   form_xml<-form_xml(parse = FALSE) %>% xml_ns_strip(.)
   
 } else {
   tryCatch({
+    print("loading data from disk")
     data<-read.csv(data_file, )
   },
   error = function(e){
@@ -116,6 +120,7 @@ if (refresh_data){
 }
 
 # pointblank QA --------------------------------------------------------------
+print("Checking the data for QA")
 agent<-
   create_agent(
     tbl = data,
@@ -157,7 +162,7 @@ if (reset_decisions) {
                         variable_value = double(),
                         meta_instance_id = character())
 } else {
-
+  print("load previous decisions")
   decisions <- tryCatch({
     read.csv(decisions_file, check.names=FALSE)
   },
@@ -173,6 +178,7 @@ if (reset_decisions) {
 }
 
 # read new info
+print("processing QA")
 validation_set <- agent$validation_set
 for (i in 1:nrow(validation_set)){
   tryCatch({
@@ -204,10 +210,17 @@ for (i in 1:nrow(validation_set)){
 
 # Inspect and decide on actions ----------------------------------------------
 
+# adjust choice labels
+
+# adjust question labels
 decisions<-add_labels_to_colnames(data, form_xml, form_sch_ext, decisions)
+
+# freeze columns
 non_edit_cols = colnames(decisions)[colnames(decisions) != 
                                       c("action","variable_value")]
 
+print("showing editor")
+# bring up editor
 decisions<-data_edit(decisions, 
                      viewer = editor,
                      title = "QA decisions",
@@ -235,6 +248,7 @@ push_decisions<- dlg_message(
 )$res == "yes"
 
 if (push_decisions){
+  print("pushing decisions to set to missing")
   action <- decisions %>% filter(action == "Set to missing")
   if (nrow(action)>0){
     for (j in 1:nrow(action)) {
@@ -243,11 +257,11 @@ if (push_decisions){
     }
   }
   
-  
+  print("pushing edit decisions")
   action <- decisions %>% filter(action == "Edit value")
   # create comments
   comments = paste0("**QA issue**: ",action$issue,
-                    " Decision: edit ", action$variable_name,
+                    " **Decision**: edit ", action$variable_name,
                     " to `", action$variable_value,"`")
   #extract paths
   path_vars<-action %>% select(variable_name) %>% 
@@ -272,7 +286,8 @@ if (push_decisions){
 }
 
 
-# save outputs -----------------------------------------------------------
+# save current status  -----------------------------------------------------------
+print("saving current files")
 write.csv(data, data_file, row.names = FALSE)
 write.csv(decisions, decisions_file, row.names = FALSE)
 
