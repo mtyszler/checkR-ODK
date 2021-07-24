@@ -90,8 +90,8 @@ if (refresh_data){
     tz = "CET"
   )
   ru_setup(
-    un = "mtyszler@gmail.com", #add your own
-    pw = "mtODKSand123@" # add your own
+    un = "get your own", #add your own
+    pw = "get your own" # add your own
   )
   ru_setup(
     pid = 20,
