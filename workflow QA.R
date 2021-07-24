@@ -226,21 +226,48 @@ decisions<-data_edit(decisions,
                                       )
                     )
 
-# implement actions ---------------------------------------------------------
-action <- decisions %>% filter(action == "Set to missing")
-if (nrow(action)>0){
-  for (j in 1:nrow(action)) {
-    data[data$meta_instance_id == action$meta_instance_id[j],
-         action$variable_name[j]] <- NA
+
+
+# implement actions? ---------------------------------------------------------
+push_decisions<- dlg_message(
+  "Push decisions to ODK central?",
+  type ="yesno"
+)$res == "yes"
+
+if (push_decisions){
+  action <- decisions %>% filter(action == "Set to missing")
+  if (nrow(action)>0){
+    for (j in 1:nrow(action)) {
+      data[data$meta_instance_id == action$meta_instance_id[j],
+           action$variable_name[j]] <- NA
+    }
   }
-}
-
-
-action <- decisions %>% filter(action == "Edit value")
-if (nrow(action)>0){
-  for (j in 1:nrow(action)) {
-    data[data$meta_instance_id == action$meta_instance_id[j],
-         action$variable_name[j]] <- action$variable_value[j]
+  
+  
+  action <- decisions %>% filter(action == "Edit value")
+  # create comments
+  comments = paste0("**QA issue**: ",action$issue,
+                    " Decision: edit ", action$variable_name,
+                    " to `", action$variable_value,"`")
+  #extract paths
+  path_vars<-action %>% select(variable_name) %>% 
+    left_join(form_sch, by=(c("variable_name"="ruodk_name"))) %>%
+    select(path)
+  
+  if (nrow(action)>0){
+    for (j in 1:nrow(action)) {
+      
+      sucess<-edit_submission(iid = action$id[j], 
+                      comment = comments[j],
+                      field = path_vars$path[j],
+                      new_value = action$variable_value[j])
+      
+      if (sucess) {
+        # clean decision from decision list
+        
+        #decisions[which(decisions$action == action$action[j])]
+      }
+    }
   }
 }
 
