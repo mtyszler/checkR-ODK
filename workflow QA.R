@@ -7,14 +7,10 @@
 #  It relies on a fork of DataEditR
 #  remotes::install_github('mtyszler/DataEditR', ref = "develop")
 #  
-#  To use it, set 2 parameters and 2 file names in section:
-#     "file names and parameters" 
-#  They control whether data is reloaded from disk or ODK
-#   and if previous decisions are to be reused or not
-#
-#  
 #  The QA checks are defined in section "QA checks defined"
 #
+#  In section "get ODK central data", please add your credentials, 
+#  and form details
 #
 #  When the editor comes up, for each row you can decide (action) between:
 #   * Accept as is
@@ -23,16 +19,15 @@
 #  
 #  Please click on "synchronize" to save your changes
 #
-# Actions will pushed to ODK Central
+#  Edit Actions will pushed to ODK Central
 #
-# At the end, there is an object "data" and a "data.csv" with the modified data
-#
+#  Unpushed decisions are saved to disk
 #
 #
 #
 # Produced by Marcelo Tyszler Consulting by request of
 # ODK team
-# Last update: 18/7/2021
+# Last update: 30/7/2021
 
 # libraries ------------------------------------------------------------------
 library(tidyverse)
