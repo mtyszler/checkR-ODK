@@ -65,7 +65,7 @@ add_labels_to_colnames <- function(odk_data, form_xml, form_sch_ext, target_tabl
 }
 
 
-edit_submission <-function(iid, comment, field, new_value,
+edit_submission <-function(iid, comment, field, new_value, form_sch,
                            pid = get_default_pid(),
                            fid = get_default_fid(),
                            url = get_default_url(),
@@ -75,6 +75,13 @@ edit_submission <-function(iid, comment, field, new_value,
   # written similar to ruODK::get_one_submission
   
   success<-FALSE
+  
+  # check type:
+  if (!check_type(field, new_value, form_sch)){
+    print("Type mismatch")
+    print(iid)
+    return(success)
+  }
   
 
   # get submission XML
@@ -161,5 +168,26 @@ edit_submission <-function(iid, comment, field, new_value,
   
 }
 
+check_type<-function(field, new_value, form_sch){
+  original_type<-form_sch %>% 
+    filter(path == field) %>%
+    select(type)
+  
+  if (original_type == "int") {
+    return(!is.na(as.integer(new_value)))
+    
+  } else if(original_type == "double") {
+    return(!is.na(as.double(new_value)))
 
+  } else if(original_type == "decimal") {
+    return(!is.na(as.double(new_value)))
+    
+  } else if(original_type == "string") {
+    return(is.na(as.character(new_value)))
+    
+  } else {
+    print("Unknown type")
+    return(FALSE)
+  }
+}
 

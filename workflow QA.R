@@ -155,7 +155,7 @@ if (reset_decisions) {
                         explanation = character(),
                         issue = character(),
                         variable_name = character(),
-                        variable_value = double(),
+                        variable_value = character(),
                         meta_instance_id = character())
 } else {
   print("load previous decisions")
@@ -183,6 +183,8 @@ for (i in 1:nrow(validation_set)){
     temp <- temp %>% select(validation_set$column[i] %>% as.character(),
                             meta_instance_id)
     colnames(temp)[1]<-"variable_value"
+    temp$variable_value<-temp$variable_value %>% 
+      as.character
     temp$issue = validation_set$brief[i]
     temp$variable_name = validation_set$column[i] %>% as.character()
     temp$action = ""
@@ -281,7 +283,8 @@ if (push_decisions){
       sucess<-edit_submission(iid = action$id[j], 
                               comment = comments[j],
                               field = path_vars$path[j],
-                              new_value = new_value)
+                              new_value = new_value,
+                              form_sch = form_sch)
       if (sucess) {
         # clean decision from decision list
         
