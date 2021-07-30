@@ -105,8 +105,8 @@ if (refresh_data){
   data<-odata_submission_get()
   print("extracting form information")
   form_sch <- form_schema()
-  form_sch_ext <- form_schema_ext()
-  form_xml<-form_xml(parse = FALSE) %>% xml_ns_strip(.)
+#  form_sch_ext <- form_schema_ext()
+#  form_xml<-form_xml(parse = FALSE) %>% xml_ns_strip(.)
   
 } else {
   tryCatch({
@@ -213,7 +213,7 @@ for (i in 1:nrow(validation_set)){
 # adjust choice labels
 
 # adjust question labels
-decisions<-add_labels_to_colnames(data, form_xml, form_sch_ext, decisions)
+#decisions<-add_labels_to_colnames(data, form_xml, form_sch_ext, decisions)
 
 # freeze columns
 non_edit_cols = colnames(decisions)[colnames(decisions) != 
