@@ -120,7 +120,7 @@ edit_submission <-function(iid, comment, field, new_value,
   header <-httr::authenticate(un, pw)
   ctype <- httr::content_type_xml()
   header$headers<-ctype$headers
-  httr::RETRY(
+  updated<-httr::RETRY(
     "PUT",
     glue::glue(
       "{url}/v1/projects/{pid}/forms/",
@@ -131,11 +131,14 @@ edit_submission <-function(iid, comment, field, new_value,
     times = retries
   )
   file.remove("subm_xml.xml")
+  if (updated$status!=200) {
+    return (success)
+  }
   
   
   
   ### add comment
-  httr::RETRY(
+  updated_comment<-httr::RETRY(
     "POST",
     glue::glue(
       "{url}/v1/projects/{pid}/forms/",
@@ -146,6 +149,9 @@ edit_submission <-function(iid, comment, field, new_value,
     encode = "json",
     times = retries
   )
+  if (updated_comment$status!=200) {
+    return (success)
+  }
   
   
   # return
