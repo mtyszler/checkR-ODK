@@ -290,7 +290,7 @@ if (push_decisions){
       if (sucess) {
         # clean decision from decision list
         
-        #decisions[which(decisions$action == action$action[j])]
+        decisions<-anti_join(decisions,action[j])
       }
     }
   }
