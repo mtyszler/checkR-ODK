@@ -254,17 +254,9 @@ push_decisions<- dlg_message(
 )$res == "yes"
 
 if (push_decisions){
-  print("pushing decisions to set to missing")
-  action <- decisions %>% filter(action == "Set to missing")
-  if (nrow(action)>0){
-    for (j in 1:nrow(action)) {
-      data[data$meta_instance_id == action$meta_instance_id[j],
-           action$variable_name[j]] <- NA
-    }
-  }
-  
-  print("pushing edit decisions")
-  action <- decisions %>% filter(action == "Edit value")
+  print("pushing decisions to edit or set to missing")
+  action <- decisions %>% filter(action == "Set to missing" | 
+                                   action == "Edit value")
   # create comments
   comments = paste0("**QA issue**: ",action$issue,
                     ifelse(is.na(action$explanation), 
@@ -272,8 +264,9 @@ if (push_decisions){
                            paste0("&nbsp;  
                                   &nbsp; 
                                   **Explanation**: ", action$explanation)
-                           )
                     )
+  )
+  
   #extract paths
   path_vars<-action %>% select(variable_name) %>% 
     left_join(form_sch, by=(c("variable_name"="ruodk_name"))) %>%
@@ -282,11 +275,18 @@ if (push_decisions){
   if (nrow(action)>0){
     for (j in 1:nrow(action)) {
       
+      if (action$action == "Set to missing") {
+        new_value = NA
+      } else if (action$action == "Edit value") {
+        new_value = action$variable_value[j]
+      } else {
+        new_value = "ERROR"
+      }
+
       sucess<-edit_submission(iid = action$id[j], 
-                      comment = comments[j],
-                      field = path_vars$path[j],
-                      new_value = action$variable_value[j])
-      
+                              comment = comments[j],
+                              field = path_vars$path[j],
+                              new_value = new_value)
       if (sucess) {
         # clean decision from decision list
         
@@ -295,6 +295,7 @@ if (push_decisions){
     }
   }
 }
+      
 
 
 # save current status  -----------------------------------------------------------
