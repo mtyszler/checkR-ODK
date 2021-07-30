@@ -275,9 +275,9 @@ if (push_decisions){
   if (nrow(action)>0){
     for (j in 1:nrow(action)) {
       
-      if (action$action == "Set to missing") {
+      if (action$action[j] == "Set to missing") {
         new_value = NA
-      } else if (action$action == "Edit value") {
+      } else if (action$action[j] == "Edit value") {
         new_value = action$variable_value[j]
       } else {
         new_value = "ERROR"
