@@ -157,6 +157,7 @@ agent<-
 # load existing decision file
 if (reset_decisions) {
   decisions<-data.frame(action = character(),
+                        explanation = character(),
                         issue = character(),
                         variable_name = character(),
                         variable_value = double(),
@@ -168,9 +169,10 @@ if (reset_decisions) {
   },
   error = function(e){
     return(data.frame(action = character(),
+                      explanation = character(),
                       issue = character(),
                       variable_name = character(),
-                      variable_value = double(),
+                      variable_value = character(),
                       meta_instance_id = character())
     )
   }
@@ -189,8 +191,10 @@ for (i in 1:nrow(validation_set)){
     temp$issue = validation_set$brief[i]
     temp$variable_name = validation_set$column[i] %>% as.character()
     temp$action = ""
+    temp$explanation = ""
     
     temp<-temp %>% select(action, 
+                          explanation,
                           issue,
                           variable_name, 
                           variable_value, 
@@ -216,8 +220,10 @@ for (i in 1:nrow(validation_set)){
 #decisions<-add_labels_to_colnames(data, form_xml, form_sch_ext, decisions)
 
 # freeze columns
-non_edit_cols = colnames(decisions)[colnames(decisions) != 
-                                      c("action","variable_value")]
+non_edit_cols = colnames(decisions)[!(colnames(decisions) %in% 
+                                      c("action", 
+                                        "explanation",
+                                        "variable_value"))]
 
 print("showing editor")
 # bring up editor
