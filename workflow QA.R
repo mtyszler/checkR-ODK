@@ -267,8 +267,13 @@ if (push_decisions){
   action <- decisions %>% filter(action == "Edit value")
   # create comments
   comments = paste0("**QA issue**: ",action$issue,
-                    " **Decision**: edit ", action$variable_name,
-                    " to `", action$variable_value,"`")
+                    ifelse(is.na(action$explanation), 
+                           "" ,
+                           paste0("&nbsp;  
+                                  &nbsp; 
+                                  **Explanation**: ", action$explanation)
+                           )
+                    )
   #extract paths
   path_vars<-action %>% select(variable_name) %>% 
     left_join(form_sch, by=(c("variable_name"="ruodk_name"))) %>%
