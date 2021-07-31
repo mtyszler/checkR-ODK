@@ -1,33 +1,38 @@
 #  Intro ----------------------------------------------------------------------
 #
 #  This R script performs QA using pointblank
-#  And provide an editable list of issues found
+#  And provides an editable list of issues found, to decide on actions on 
+#  ODK Central
 #
-#
-#  It relies on a fork of DataEditR
+#  It relies on a fork of DataEditR, which simplified DataEditR for the
+#  purposes of this application. Please install it from:
 #  remotes::install_github('mtyszler/DataEditR', ref = "develop")
 #  
-#  The QA checks are defined in section "QA checks defined"
+#  The QA checks are defined in section "QA checks defined".
+#  For syntax, please see: 
+#  https://rich-iannone.github.io/pointblank/articles/VALID-I.html
 #
 #  In section "get ODK central data", please add your credentials, 
-#  and form details
+#  and form details. For details, please see:
+#  https://docs.ropensci.org/ruODK/reference/ru_setup.html 
 #
-#  When the editor comes up, for each row you can decide (action) between:
+#  When the editor comes up, for each row the user can decide (action) between:
 #   * Accept as is
 #   * Set to missing
 #   * Edit value
+#   * Ignore (leave action 'blank')
 #  
 #  Please click on "synchronize" to save your changes
 #
-#  Edit Actions will pushed to ODK Central
+#  Edit Actions ('Edit value' and 'Set to missing') can be pushed to ODK Central
 #
-#  Unpushed decisions are saved to disk
+#  Unpushed decisions are saved to disk, as well latest data version
 #
 #
 #
 # Produced by Marcelo Tyszler Consulting by request of
 # ODK team
-# Last update: 30/7/2021
+# Last update: 31/7/2021
 
 # libraries ------------------------------------------------------------------
 library(tidyverse)
@@ -41,31 +46,21 @@ library(uuid)
 library(svDialogs)
 source("R_supporting_functions.R")
 
+# Refresh data and/or decisions? ----------------------------------------------------
 
-# file names and parameters ----------------------------------------------------
-
-## Question is asked via dialog box.
-# comment the dialog box and uncomment the hard coded to skip the dialog box
-# via dialog box
+## Refresh data?
 refresh_data<- dlg_message(
                 "Reload data from ODK?",
                 type ="yesno"
               )$res == "yes"
 
-# hard coded
-#refresh_data <- TRUE # TRUE will reload raw data from ODK
 
-## Question is asked via dialog box.
-# comment the dialog box and uncomment the hard coded to skip the dialog box
-# via dialog box
+# Refresh decisions?
 reset_decisions<- dlg_message(
   "Reuse previous decisions (if available)?",
   type ="yesno"
 )$res == "no"
 
-# hard coded
-#reset_decisions <- FALSE # TRUE will ignore past decisions, 
-                        # FALSE will reuse previous decisions
 
 ## EDTIABLE BY THE USER ------------------------------------------------------
 # file names can be full path or relative to the R session location
@@ -75,16 +70,12 @@ data_file<-"data.csv"
 editor <- "dialog" # "dialog" for window within R
                    # "browser" for tab in your default browser
 
-
-
-
-
 # get ODK central data -------------------------------------------------------
 
 if (refresh_data){
   ru_setup(
     # change this address once we have a paid subscription
-    url = "https://sandbox.getodk.cloud",
+    url = "https://sandbox.getodk.cloud", #edit to your own
     tz = "CET"
   )
   ru_setup(
@@ -92,8 +83,8 @@ if (refresh_data){
     pw = "get your own" # add your own
   )
   ru_setup(
-    pid = 20,
-    fid = "sample_one_lang"
+    pid = 20, # edit to your project
+    fid = "sample_one_lang" # edit to your form
   )
   
   print("loading data from ODK")
@@ -111,6 +102,7 @@ if (refresh_data){
   error = function(e){
     print("Data load failed")
     print(e)
+    stop("Data load from disk failed")
   })
 }
 
@@ -163,6 +155,7 @@ if (reset_decisions) {
     read.csv(decisions_file, check.names=FALSE)
   },
   error = function(e){
+    warning("Load decisions from disk failed. Using blank list.")
     return(data.frame(action = character(),
                       explanation = character(),
                       issue = character(),
@@ -223,72 +216,76 @@ non_edit_cols = colnames(decisions)[!(colnames(decisions) %in%
                                         "variable_value"))]
 
 print("showing editor")
-# bring up editor
-decisions<-data_edit(decisions, 
-                     viewer = editor,
-                     title = "QA decisions",
-                     logo = "https://opendatakit.org/assets/images/odk-logo.png",
-                     logo_size = 70,
-                     theme = "sandstone",
-                     #save_as = "QA_file.csv",
-                     #code = "QA_codeR.R",
-                     col_edit =  FALSE,
-                     col_names = colnames(decisions),
-                     row_edit = FALSE,
-                     col_readonly = non_edit_cols, 
-                     col_options = list(action = c("Accept as is",
-                                                   "Set to missing",
-                                                   "Edit value")
-                                      )
-                    )
-
-
-
-# implement actions? ---------------------------------------------------------
-push_decisions<- dlg_message(
-  "Push decisions to ODK central?",
-  type ="yesno"
-)$res == "yes"
-
-if (push_decisions){
-  print("pushing decisions to edit or set to missing")
-  action <- decisions %>% filter(action == "Set to missing" | 
-                                   action == "Edit value")
-  # create comments
-  comments = paste0("**QA issue**: ",action$issue,
-                    ifelse(is.na(action$explanation), 
-                           "" ,
-                           paste0("&nbsp;  
-                                  &nbsp; 
-                                  **Explanation**: ", action$explanation)
-                    )
-  )
+if (nrow(decisions)==0){
+  warning("No errors found by QA. Skipping editor.")
+} else {
+  # bring up editor
+  decisions<-data_edit(decisions, 
+                       viewer = editor,
+                       title = "QA decisions",
+                       logo = "https://opendatakit.org/assets/images/odk-logo.png",
+                       logo_size = 70,
+                       theme = "sandstone",
+                       #save_as = "QA_file.csv",
+                       #code = "QA_codeR.R",
+                       col_edit =  FALSE,
+                       col_names = colnames(decisions),
+                       row_edit = FALSE,
+                       col_readonly = non_edit_cols, 
+                       col_options = list(action = c("Accept as is",
+                                                     "Set to missing",
+                                                     "Edit value")
+                                        )
+                      )
   
-  #extract paths
-  path_vars<-action %>% select(variable_name) %>% 
-    left_join(form_sch, by=(c("variable_name"="ruodk_name"))) %>%
-    select(path)
   
-  if (nrow(action)>0){
-    for (j in 1:nrow(action)) {
-      
-      if (action$action[j] == "Set to missing") {
-        new_value = NA
-      } else if (action$action[j] == "Edit value") {
-        new_value = action$variable_value[j]
-      } else {
-        new_value = "ERROR"
-      }
-
-      sucess<-edit_submission(iid = action$id[j], 
-                              comment = comments[j],
-                              field = path_vars$path[j],
-                              new_value = new_value,
-                              form_sch = form_sch)
-      if (sucess) {
-        # clean decision from decision list
+  
+  # implement actions? ---------------------------------------------------------
+  push_decisions<- dlg_message(
+    "Push decisions to ODK central?",
+    type ="yesno"
+  )$res == "yes"
+  
+  if (push_decisions){
+    print("pushing decisions to edit or set to missing")
+    action <- decisions %>% filter(action == "Set to missing" | 
+                                     action == "Edit value")
+    # create comments
+    comments = paste0("**QA issue**: ",action$issue,
+                      ifelse(is.na(action$explanation), 
+                             "" ,
+                             paste0("&nbsp;  
+                                    &nbsp; 
+                                    **Explanation**: ", action$explanation)
+                      )
+    )
+    
+    #extract paths
+    path_vars<-action %>% select(variable_name) %>% 
+      left_join(form_sch, by=(c("variable_name"="ruodk_name"))) %>%
+      select(path)
+    
+    if (nrow(action)>0){
+      for (j in 1:nrow(action)) {
         
-        decisions<-anti_join(decisions,action[j])
+        if (action$action[j] == "Set to missing") {
+          new_value = NA
+        } else if (action$action[j] == "Edit value") {
+          new_value = action$variable_value[j]
+        } else {
+          new_value = "ERROR"
+        }
+  
+        sucess<-edit_submission(iid = action$id[j], 
+                                comment = comments[j],
+                                field = path_vars$path[j],
+                                new_value = new_value,
+                                form_sch = form_sch)
+        if (sucess) {
+          # clean decision from decision list
+          
+          decisions<-anti_join(decisions,action[j])
+        }
       }
     }
   }
