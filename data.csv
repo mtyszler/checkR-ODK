@@ -1,0 +1,4 @@
+"id","age","sex","blood_pressure","system_submission_date","system_submitter_id","system_submitter_name","system_attachments_present","system_attachments_expected","system_edits","meta_instance_id","odata_context"
+"uuid:d2d997c4-0115-4668-8e5a-390d11798992",61,"1",350,"2021-07-23T21:20:26.565Z","284","mtyszler@gmail.com",0,0,0,"uuid:d2d997c4-0115-4668-8e5a-390d11798992","https://sandbox.getodk.cloud/v1/projects/20/forms/sample_one_lang.svc/$metadata#Submissions"
+"uuid:ce6a2482-29ed-471e-a647-af3c728bec68",45,"2",30,"2021-07-23T21:20:18.581Z","284","mtyszler@gmail.com",0,0,0,"uuid:ce6a2482-29ed-471e-a647-af3c728bec68","https://sandbox.getodk.cloud/v1/projects/20/forms/sample_one_lang.svc/$metadata#Submissions"
+"uuid:dd9b15e9-8179-4e27-9a69-39b983358f9e",210,"1",450,"2021-07-23T21:20:09.698Z","284","mtyszler@gmail.com",0,0,0,"uuid:dd9b15e9-8179-4e27-9a69-39b983358f9e","https://sandbox.getodk.cloud/v1/projects/20/forms/sample_one_lang.svc/$metadata#Submissions"
