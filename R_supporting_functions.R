@@ -78,7 +78,10 @@ edit_submission <-function(iid, comment, field, new_value, form_sch,
   
   # check type:
   if (!check_type(field, new_value, form_sch)){
-    print(paste0("Type mismatch: [", field, "]: ", new_value))
+    original_type<-form_sch %>% 
+      filter(path == field) %>%
+      select(type)
+    print(paste0("Type mismatch, ", original_type, " expected: [", field, "]: ", new_value))
     print(iid)
     return(success)
   }
@@ -168,13 +171,22 @@ edit_submission <-function(iid, comment, field, new_value, form_sch,
   
 }
 
+is.wholenumber <-
+  function(x, tol = .Machine$double.eps^0.5)  abs(x - round(x)) < tol
+
+
 check_type<-function(field, new_value, form_sch){
   original_type<-form_sch %>% 
     filter(path == field) %>%
     select(type)
   
   if (original_type == "int") {
-    return(!is.na(as.integer(new_value)))
+    if(!is.na(as.double(new_value))) {
+      return(is.wholenumber(as.double(new_value)))
+      
+    } else {
+      return(FALSE)
+    }
     
   } else if(original_type == "double") {
     return(!is.na(as.double(new_value)))
