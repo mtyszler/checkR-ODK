@@ -78,7 +78,7 @@ edit_submission <-function(iid, comment, field, new_value, form_sch,
   
   # check type:
   if (!check_type(field, new_value, form_sch)){
-    print("Type mismatch")
+    print(paste0("Type mismatch: [", field, "]: ", new_value))
     print(iid)
     return(success)
   }
