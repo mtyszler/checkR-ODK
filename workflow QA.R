@@ -222,7 +222,7 @@ if (nrow(decisions)==0){
   # bring up editor
   decisions<-data_edit(decisions, 
                        viewer = editor,
-                       title = "QA decisions",
+                       title = "checkR-ODK",
                        logo = "https://opendatakit.org/assets/images/odk-logo.png",
                        logo_size = 70,
                        theme = "sandstone",
