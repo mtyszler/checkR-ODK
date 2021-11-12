@@ -32,7 +32,7 @@
 #
 # Produced by Marcelo Tyszler Consulting by request of
 # ODK team
-# Last update: 31/7/2021
+# Last update: 13/11/2021
 
 # libraries ------------------------------------------------------------------
 library(tidyverse)
@@ -222,7 +222,7 @@ if (nrow(decisions)==0){
   # bring up editor
   decisions<-data_edit(decisions, 
                        viewer = editor,
-                       title = "QA decisions",
+                       title = "checkR-ODK",
                        logo = "https://opendatakit.org/assets/images/odk-logo.png",
                        logo_size = 70,
                        theme = "sandstone",
